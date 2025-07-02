@@ -526,8 +526,9 @@ def main():
     #Check whether the user is trying to copy samples without adding netherlands institute for neuroscience-specific-metadata
     if check_nin_metadata(source_dirs):
         print(
-            "\nSome of the samples:" %check_nin_metadata(source_dirs)", you are trying to copy do not have\n"
-            "NIN_metadata_session.json files present.\n"
+            '\nSome of the samples: "%s", you are trying to copy do not have\n'
+            'NIN_metadata_session.json files present.' 
+            % check_nin_metadata(source_dirs)
         )
         if not tools.query_yes_no(
                 "Would you like to continue without adding nin-metadata?\n"
