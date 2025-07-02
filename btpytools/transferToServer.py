@@ -36,6 +36,7 @@ import subprocess
 from textwrap import dedent  # To remove common leading white-space
 from btpytools import tools
 from termcolor import colored
+import webbrowser
 
 
 def cli_parser():
@@ -88,7 +89,7 @@ def cli_parser():
                 for some reason, then compression will fail. tmux is therefore recommended
                 in this situation.
 
-                If the transfer completed successfully, the command creates an empty filed
+                If the transfer completed successfully, the command creates an empty file
                 called `TRANSFER_SUCCEEDED` in the local directory (or directories). This
                 file is not copied to the server.
             """
@@ -168,7 +169,7 @@ def user_specified_cropped_directories_individually(source_dirs, verbose=False):
 
     Notes:
     - Function returns true even if some samples nested within the parent directory
-      were not supplied.
+    were not supplied.
     """
 
     # If the list is only one directory long (or is a string) then we still need to check if it
@@ -402,6 +403,26 @@ def remove_single_samples_from_list(source_dirs, verbose=False):
 
     return source_dirs
 
+def check_nin_metadata(source_dirs, verbose=False):
+    """
+    If the user is running transferToServer check for presence of nin-follow your data(fyd) metadata.
+    A list will be returned of all samples without metadata.json files present 
+    """
+    list_of_samples_without_metadata = []
+    for t_dir in source_dirs:
+        if not os.path.isdir(t_dir):
+            continue
+        for f in os.listdir(t_dir):
+            if re.match(r'.*_session*\.json$', f):
+                if verbose:
+                    print("metadata.json found in %s" % t_dir)
+                break
+            else:
+                if os.path.basename(t_dir) not in list_of_samples_without_metadata:
+                    list_of_samples_without_metadata.append(os.path.basename(t_dir))
+                    if verbose:
+                        print("No metadata.json found in %s" % t_dir)
+    return list_of_samples_without_metadata
 
 def main():
     """
@@ -500,6 +521,19 @@ def main():
     if not safe_to_copy:
         print("\n IS IT OK TO PROCEED DESPITE THE ABOVE WARNINGS?")
         if not tools.query_yes_no(""):
+            sys.exit()
+
+    #Check whether the user is trying to copy samples without adding netherlands institute for neuroscience-specific-metadata
+    if check_nin_metadata(source_dirs):
+        print(
+            "\nSome of the samples:" %check_nin_metadata(source_dirs)", you are trying to copy do not have\n"
+            "NIN_metadata_session.json files present.\n"
+        )
+        if not tools.query_yes_no(
+                "Would you like to continue without adding nin-metadata?\n"
+                "If you choose no, you will be redirected to the fyd login page.", default="no"
+        ):
+            webbrowser.open('https://nhi-fyd.nin.nl/#/loginvw')
             sys.exit()
 
     # Check whether the user is maybe failing to copy raw data
