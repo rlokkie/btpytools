@@ -403,26 +403,22 @@ def remove_single_samples_from_list(source_dirs, verbose=False):
 
     return source_dirs
 
-def check_nin_metadata(source_dirs, verbose=False):
+def check_nin_metadata(source_dirs, verbose=False): 
     """
     If the user is running transferToServer check for presence of nin-follow your data(fyd) metadata.
     A list will be returned of all samples without metadata.json files present 
     """
-    list_of_samples_without_metadata = []
+    list_of_samples_with_metadata = []
     for t_dir in source_dirs:
         if not os.path.isdir(t_dir):
             continue
         for f in os.listdir(t_dir):
             if re.match(r'.*_session*\.json$', f):
-                if verbose:
-                    print("metadata.json found in %s" % t_dir)
-                break
-            else:
-                if os.path.basename(t_dir) not in list_of_samples_without_metadata:
-                    list_of_samples_without_metadata.append(os.path.basename(t_dir))
+                if os.path.basename(t_dir) not in list_of_samples_with_metadata:
+                    list_of_samples_with_metadata.append(os.path.basename(t_dir))
                     if verbose:
-                        print("No metadata.json found in %s" % t_dir)
-    return list_of_samples_without_metadata
+                        print("Metadata.json found in %s" % t_dir)
+    return list(set(source_dirs)-set(list_of_samples_with_metadata))
 
 def main():
     """
